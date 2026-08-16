@@ -27,7 +27,7 @@ class AppMonitorService : Service() {
     private val recentlyUnlocked = mutableMapOf<String, Long>()
     private var lastForegroundPackage: String? = null
 
-    override fun onBind(intent: IBinder?): IBinder? = null
+    override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
