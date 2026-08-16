@@ -26,12 +26,12 @@ jobs:
         gradle wrapper --gradle-version 8.5 || true
         chmod +x gradlew || true
 
-    - name: Build Debug APK
+    - name: Clean and Build Debug APK
       run: |
         if [ -f "./gradlew" ]; then
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew clean assembleDebug --no-daemon
         else
-          gradle assembleDebug --no-daemon
+          gradle clean assembleDebug --no-daemon
         fi
 
     - name: Upload APK Artifact
