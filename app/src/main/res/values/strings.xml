@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AppLock Guard</string>
+
+    <!-- Setup Screen -->
+    <string name="setup_title">Secure Your Apps</string>
+    <string name="setup_subtitle">Set up a master PIN or pattern to protect your apps</string>
+    <string name="setup_choose_pin">Set PIN</string>
+    <string name="setup_choose_pattern">Set Pattern</string>
+    <string name="setup_enter_pin">Enter a 4–6 digit PIN</string>
+    <string name="setup_confirm_pin">Confirm your PIN</string>
+    <string name="setup_draw_pattern">Draw an unlock pattern</string>
+    <string name="setup_confirm_pattern">Confirm your pattern</string>
+    <string name="setup_pin_mismatch">PINs don\'t match. Try again.</string>
+    <string name="setup_pattern_mismatch">Patterns don\'t match. Try again.</string>
+    <string name="setup_enable_biometric">Enable Fingerprint Unlock</string>
+    <string name="setup_complete">Setup Complete!</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">AppLock Guard</string>
+    <string name="home_locked_apps">Locked Apps</string>
+    <string name="home_service_active">Protection Active</string>
+    <string name="home_service_inactive">Protection Inactive</string>
+    <string name="home_start_service">Start Protection</string>
+    <string name="home_stop_service">Stop Protection</string>
+    <string name="home_manage_apps">Manage Apps</string>
+    <string name="home_settings">Settings</string>
+
+    <!-- App List Screen -->
+    <string name="applist_title">Select Apps to Lock</string>
+    <string name="applist_search_hint">Search apps…</string>
+    <string name="applist_no_apps">No apps found</string>
+    <string name="applist_locked">Locked</string>
+    <string name="applist_unlocked">Unlocked</string>
+
+    <!-- Lock Screen -->
+    <string name="lock_title">App Locked</string>
+    <string name="lock_enter_pin">Enter PIN to unlock</string>
+    <string name="lock_draw_pattern">Draw pattern to unlock</string>
+    <string name="lock_wrong_pin">Wrong PIN. Try again.</string>
+    <string name="lock_wrong_pattern">Wrong pattern. Try again.</string>
+    <string name="lock_attempts_remaining">%d attempts remaining</string>
+    <string name="lock_locked_out">Too many attempts. Try again in %d seconds.</string>
+    <string name="lock_use_fingerprint">Use Fingerprint</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_change_pin">Change PIN</string>
+    <string name="settings_change_pattern">Change Pattern</string>
+    <string name="settings_biometric">Fingerprint Authentication</string>
+    <string name="settings_biometric_desc">Use fingerprint to unlock apps</string>
+    <string name="settings_auto_start">Auto-start on Boot</string>
+    <string name="settings_auto_start_desc">Automatically protect apps after restart</string>
+    <string name="settings_relock_time">Re-lock Timeout</string>
+    <string name="settings_relock_time_desc">Time before re-locking an unlocked app</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Version %s</string>
+    <string name="settings_reset">Reset All Settings</string>
+
+    <!-- Biometric -->
+    <string name="biometric_prompt_title">Fingerprint Unlock</string>
+    <string name="biometric_prompt_subtitle">Touch the sensor to unlock</string>
+    <string name="biometric_prompt_cancel">Use PIN</string>
+    <string name="biometric_not_available">Fingerprint not available on this device</string>
+    <string name="biometric_not_enrolled">No fingerprints enrolled. Please set up in Settings.</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">App Lock Service</string>
+    <string name="notification_channel_desc">Keeps your apps protected</string>
+    <string name="notification_title">AppLock Guard Active</string>
+    <string name="notification_text">Your apps are protected</string>
+
+    <!-- Permissions -->
+    <string name="permission_usage_title">Usage Access Required</string>
+    <string name="permission_usage_desc">AppLock Guard needs Usage Access permission to detect which apps are running. Please grant it in Settings.</string>
+    <string name="permission_overlay_title">Overlay Permission Required</string>
+    <string name="permission_overlay_desc">AppLock Guard needs to display over other apps to show the lock screen.</string>
+    <string name="permission_grant">Grant Permission</string>
+
+    <!-- General -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="confirm">Confirm</string>
+    <string name="next">Next</string>
+    <string name="back">Back</string>
+    <string name="done">Done</string>
+</resources>
