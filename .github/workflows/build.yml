@@ -21,12 +21,12 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Install Gradle
-      run: sudo apt-get update && sudo apt-get install -y gradle
-
-    - name: Generate Gradle Wrapper
+    - name: Install Gradle & Generate Wrapper
       run: |
-        gradle wrapper --gradle-version 8.0
+        sudo apt-get update && sudo apt-get install -y gradle
+        if [ ! -f "gradlew" ]; then
+          gradle wrapper
+        fi
         chmod +x gradlew
 
     - name: Build Debug APK with Gradle
