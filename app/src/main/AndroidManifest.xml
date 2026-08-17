@@ -1,24 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Permissions -->
-    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
-        tools:ignore="ProtectedPermissions" />
+    <!-- રિયલ લાઈફ એપ લોક માટે જરૂરી પરવાનગીઓ -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
-        tools:ignore="QueryAllPackagesPermission" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-
-    <!-- Biometric hardware feature (optional) -->
-    <uses-feature
-        android:name="android.hardware.fingerprint"
-        android:required="false" />
 
     <application
         android:name=".AppLockApplication"
@@ -27,46 +16,31 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppLockGuard"
-        tools:targetApi="34">
+        android:theme="@style/Theme.AppLock">
 
-        <!-- Main Activity -->
+        <!-- મુખ્ય એક્ટિવિટી -->
         <activity
-            android:name=".MainActivity"
-            android:exported="true"
-            android:theme="@style/Theme.AppLockGuard">
+            android:name=".ui.MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- Lock Screen Activity (overlay) -->
+        <!-- લોક સ્ક્રીન એક્ટિવિટી -->
         <activity
-            android:name=".service.LockScreenActivity"
-            android:exported="false"
+            android:name=".ui.lock.LockScreenActivity"
             android:excludeFromRecents="true"
-            android:launchMode="singleInstance"
-            android:taskAffinity=""
-            android:theme="@style/Theme.AppLockGuard" />
+            android:exported="false"
+            android:launchMode="singleTask" />
 
-        <!-- App Monitor Foreground Service -->
+        <!-- બેકગ્રાઉન્ડ સર્વિસ જે એપ મોનિટર કરશે -->
         <service
             android:name=".service.AppMonitorService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse" />
-
-        <!-- Boot Receiver -->
-        <receiver
-            android:name=".service.BootReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-            </intent-filter>
-        </receiver>
 
     </application>
 
