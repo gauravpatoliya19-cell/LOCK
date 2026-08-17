@@ -21,10 +21,16 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Build APK (Ignore Resource Check)
+    - name: Generate Gradle Wrapper if Missing
       run: |
+        if [ ! -f "./gradlew" ]; then
+          gradle wrapper --gradle-version 8.5
+        fi
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon --info
+
+    - name: Build Debug APK
+      run: |
+        ./gradlew assembleDebug --no-daemon
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
