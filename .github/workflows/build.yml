@@ -1,3 +1,38 @@
+logo
+more
+question-ai-logo
+managemanage
+managemanage
+useruser
+fullfull
+closeclose
+Chat AI
+Hello! Is there any question I can help you with?
+What are the main industries driving the U.S. economy?
+How to save chat content in QuestionAI?
+
+Ask AI
+Skip to content
+gauravpatoliya19-cell
+LOCK
+Sourcegraph
+Repository navigation
+Code
+Issues
+Pull requests
+Agents
+Actions
+Projects
+Wiki
+Security and quality
+Insights
+Settings
+Build Android APK
+fix: onBind parameter type IBinder -> Intent in AppMonitorService #12
+All jobs
+Run details
+Workflow file for this run
+.github/workflows/build.yml at 39f483d
 name: Build Android APK
 
 on:
@@ -21,19 +56,38 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Generate Gradle Wrapper if Missing
+    - name: Create Missing Launcher Icons Automatically
       run: |
-        if [ ! -f "./gradlew" ]; then
-          gradle wrapper --gradle-version 8.5
+        mkdir -p app/src/main/res/mipmap-hdpi
+        mkdir -p app/src/main/res/mipmap-mdpi
+        mkdir -p app/src/main/res/mipmap-xhdpi
+        mkdir -p app/src/main/res/mipmap-xxhdpi
+        mkdir -p app/src/main/res/mipmap-xxxhdpi
+        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" | base64 --decode > app/src/main/res/mipmap-hdpi/ic_launcher.png
+        cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-mdpi/ic_launcher.png
+        cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xhdpi/ic_launcher.png
+        cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+        cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+        cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+        cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+        cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+        cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+        cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+    - name: Fix Gradle Wrapper
+      run: |
+        gradle wrapper --gradle-version 8.5 || true
+        chmod +x gradlew || true
+    - name: Clean and Build Debug APK
+      run: |
+        if [ -f "./gradlew" ]; then
+          ./gradlew clean assembleDebug --no-daemon
+        else
+          gradle clean assembleDebug --no-daemon
         fi
-        chmod +x gradlew
-
-    - name: Build Debug APK
-      run: |
-        ./gradlew assembleDebug --no-daemon
-
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
         path: app/build/outputs/apk/debug/app-debug.apk
+
+✕Merlin
