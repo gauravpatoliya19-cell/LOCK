@@ -10,8 +10,11 @@ import com.applock.guard.data.db.LockedAppDao
 import com.applock.guard.data.db.LockedAppEntity
 import com.applock.guard.data.preferences.SecurePreferences
 import com.applock.guard.util.CryptoHelper
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 
@@ -28,19 +31,18 @@ class AppRepository(
     private val context: Context
 ) {
 
-    // Fast in-memory cached set of locked package names for 0ms lock lookups
+    private val repositoryScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val lockedPackagesCache = ConcurrentHashMap.newKeySet<String>()
 
     init {
-        // Initial sync of cached locked packages
-        kotlinx.coroutines.CoroutineScope(Dispatchers.IO).kotlinx.coroutines.launch {
+        repositoryScope.launch {
             try {
                 val list = lockedAppDao.getActiveLockedAppsList()
                 lockedPackagesCache.clear()
                 lockedPackagesCache.addAll(list.map { it.packageName })
-                Log.d("AppRepository", "Initialized locked cache with ${lockedPackagesCache.size} apps: $lockedPackagesCache")
+                Log.d("AppRepository", "Initialized locked cache with ${lockedPackagesCache.size} apps")
             } catch (e: Exception) {
-                Log.e("AppRepository", "Error initializing locked packages cache", e)
+                Log.e("AppRepository", "Error initializing locked cache", e)
             }
         }
     }
@@ -137,7 +139,6 @@ class AppRepository(
             lockedPackagesCache.remove(packageName)
             lockedAppDao.deleteByPackage(packageName)
         }
-        Log.d("AppRepository", "Toggled $packageName -> $shouldLock. Active cache: $lockedPackagesCache")
     }
 
     suspend fun lockAllApps(apps: List<InstalledApp>) = withContext(Dispatchers.IO) {
