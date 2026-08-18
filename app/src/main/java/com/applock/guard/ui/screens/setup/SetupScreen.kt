@@ -24,10 +24,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Grid3x3
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Pin
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -37,6 +41,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -47,15 +52,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.applock.guard.ui.components.PatternLock
 import com.applock.guard.ui.components.PinInput
 import com.applock.guard.ui.theme.*
+import com.applock.guard.util.PermissionHelper
+import kotlinx.coroutines.delay
 
 enum class SetupStep {
-    CHOOSE_TYPE, ENTER_LOCK, CONFIRM_LOCK, ENABLE_BIOMETRIC, COMPLETE
+    PERMISSIONS, CHOOSE_TYPE, ENTER_LOCK, CONFIRM_LOCK, ENABLE_BIOMETRIC, COMPLETE
 }
 
 @Composable
@@ -63,6 +71,18 @@ fun SetupScreen(
     isBiometricAvailable: Boolean,
     onSetupComplete: (lockType: String, lockValue: String, biometricEnabled: Boolean) -> Unit
 ) {
+    val context = LocalContext.current
+    var hasUsageStatsPermission by remember { mutableStateOf(PermissionHelper.hasUsageStatsPermission(context)) }
+    var hasOverlayPermission by remember { mutableStateOf(PermissionHelper.hasOverlayPermission(context)) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            hasUsageStatsPermission = PermissionHelper.hasUsageStatsPermission(context)
+            hasOverlayPermission = PermissionHelper.hasOverlayPermission(context)
+            delay(1000)
+        }
+    }
+
     var currentStep by remember { mutableIntStateOf(0) }
     var selectedType by remember { mutableStateOf("") } // "pin" or "pattern"
     var firstEntry by remember { mutableStateOf("") }
@@ -74,6 +94,7 @@ fun SetupScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val steps = listOf(
+        SetupStep.PERMISSIONS,
         SetupStep.CHOOSE_TYPE,
         SetupStep.ENTER_LOCK,
         SetupStep.CONFIRM_LOCK,
@@ -118,6 +139,51 @@ fun SetupScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     when (targetStep) {
+                        SetupStep.PERMISSIONS -> {
+                            Icon(
+                                imageVector = Icons.Default.Security,
+                                contentDescription = null,
+                                tint = AccentBlue,
+                                modifier = Modifier.size(56.dp)
+                            )
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Text(
+                                text = "Welcome to AppLock Guard",
+                                style = MaterialTheme.typography.displayMedium,
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Grant permissions to get started",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = TextSecondary
+                            )
+                            Spacer(modifier = Modifier.height(48.dp))
+
+                            PermissionCard(
+                                title = "Usage Access",
+                                description = "Required to detect app launches",
+                                isGranted = hasUsageStatsPermission,
+                                onGrantClick = { PermissionHelper.requestUsageStatsPermission(context) }
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            PermissionCard(
+                                title = "Display Over Apps",
+                                description = "Required to show the lock screen",
+                                isGranted = hasOverlayPermission,
+                                onGrantClick = { PermissionHelper.requestOverlayPermission(context) }
+                            )
+
+                            Spacer(modifier = Modifier.height(40.dp))
+
+                            GradientButton(
+                                text = "Continue",
+                                enabled = hasUsageStatsPermission && hasOverlayPermission,
+                                onClick = { currentStep++ }
+                            )
+                        }
+
                         SetupStep.CHOOSE_TYPE -> {
                             // Title
                             Icon(
@@ -430,6 +496,77 @@ private fun StepIndicator(current: Int, total: Int) {
                         }
                     )
             )
+        }
+    }
+}
+
+@Composable
+private fun PermissionCard(
+    title: String,
+    description: String,
+    isGranted: Boolean,
+    onGrantClick: () -> Unit
+) {
+    val bgColor = SurfaceCard
+    val borderColor = if (isGranted) SuccessGreen else TextMuted.copy(alpha = 0.15f)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(bgColor)
+            .border(1.5.dp, borderColor, RoundedCornerShape(16.dp))
+            .padding(20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(
+                    if (isGranted) SuccessGreen.copy(alpha = 0.2f) else ErrorRed.copy(alpha = 0.1f)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (isGranted) Icons.Default.Check else Icons.Default.Close,
+                contentDescription = null,
+                tint = if (isGranted) SuccessGreen else ErrorRed,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = TextPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary
+            )
+        }
+
+        if (!isGranted) {
+            Spacer(modifier = Modifier.width(12.dp))
+            Button(
+                onClick = onGrantClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AccentBlue
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    "Grant",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

@@ -1,50 +1,22 @@
-logo
-more
-question-ai-logo
-managemanage
-managemanage
-useruser
-fullfull
-closeclose
-Chat AI
-Hello! Is there any question I can help you with?
-What are the main industries driving the U.S. economy?
-How to save chat content in QuestionAI?
-
-Ask AI
-Skip to content
-gauravpatoliya19-cell
-LOCK
-Sourcegraph
-Repository navigation
-Code
-Issues
-Pull requests
-Agents
-Actions
-Projects
-Wiki
-Security and quality
-Insights
-Settings
-Build Android APK
-fix: onBind parameter type IBinder -> Intent in AppMonitorService #12
-All jobs
-Run details
-Workflow file for this run
-.github/workflows/build.yml at 39f483d
-name: Build Android APK
+name: Build and Release Android APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
+    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout Repository
       uses: actions/checkout@v4
 
     - name: Set up JDK 17
@@ -52,6 +24,7 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
+        cache: 'gradle'
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
@@ -73,10 +46,12 @@ jobs:
         cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
         cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
         cp app/src/main/res/mipmap-hdpi/ic_launcher.png app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
-    - name: Fix Gradle Wrapper
+
+    - name: Grant Execute Permission for Gradle Wrapper
       run: |
         gradle wrapper --gradle-version 8.5 || true
         chmod +x gradlew || true
+
     - name: Clean and Build Debug APK
       run: |
         if [ -f "./gradlew" ]; then
@@ -84,10 +59,15 @@ jobs:
         else
           gradle clean assembleDebug --no-daemon
         fi
-    - name: Upload APK Artifact
+
+    - name: Rename APK for Easy Identification
+      run: |
+        mkdir -p release_apk
+        cp app/build/outputs/apk/debug/app-debug.apk release_apk/AppLock-Fingerprint-PIN.apk
+
+    - name: Upload APK as GitHub Actions Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: app-debug
-        path: app/build/outputs/apk/debug/app-debug.apk
-
-✕Merlin
+        name: AppLock-Fingerprint-PIN-APK
+        path: release_apk/AppLock-Fingerprint-PIN.apk
+        retention-days: 30
