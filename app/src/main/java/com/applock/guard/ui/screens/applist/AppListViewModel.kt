@@ -46,15 +46,31 @@ class AppListViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun toggleAppLock(packageName: String, appName: String, shouldLock: Boolean) {
-        // 1. Immediately update UI state in memory for 0ms visual feedback
+        // 1. Instantly update UI state
         allApps = allApps.map {
             if (it.packageName == packageName) it.copy(isLocked = shouldLock) else it
         }
         applyFilter()
 
-        // 2. Persist to Room database in background
+        // 2. Persist to DB
         viewModelScope.launch {
             repository.toggleAppLock(packageName, appName, shouldLock)
+        }
+    }
+
+    fun lockAll() {
+        allApps = allApps.map { it.copy(isLocked = true) }
+        applyFilter()
+        viewModelScope.launch {
+            repository.lockAllApps(allApps)
+        }
+    }
+
+    fun unlockAll() {
+        allApps = allApps.map { it.copy(isLocked = false) }
+        applyFilter()
+        viewModelScope.launch {
+            repository.unlockAllApps()
         }
     }
 

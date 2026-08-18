@@ -5,8 +5,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,11 +21,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -37,6 +44,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.applock.guard.ui.components.AppListItem
 import com.applock.guard.ui.theme.*
@@ -49,6 +57,9 @@ fun AppListScreen(
     val apps by viewModel.apps.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
+
+    val lockedCount = apps.count { it.isLocked }
+    val totalCount = apps.size
 
     Box(
         modifier = Modifier
@@ -67,18 +78,58 @@ fun AppListScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Header
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    tint = TextPrimary
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = TextPrimary
+                    )
+                }
+
+                // Quick Lock All / Unlock All
+                if (apps.isNotEmpty()) {
+                    val allLocked = apps.all { it.isLocked }
+                    OutlinedButton(
+                        onClick = {
+                            if (allLocked) {
+                                viewModel.unlockAll()
+                            } else {
+                                viewModel.lockAll()
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = if (allLocked) AccentCyan else AccentBlue
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            if (allLocked) AccentCyan else AccentBlue
+                        )
+                    ) {
+                        Icon(
+                            imageVector = if (allLocked) Icons.Default.LockOpen else Icons.Default.Lock,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.size(6.dp))
+                        Text(
+                            text = if (allLocked) "Unlock All" else "Lock All",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "Select Apps to Lock",
+                text = "Manage Apps",
                 style = MaterialTheme.typography.headlineLarge,
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold,
@@ -86,20 +137,20 @@ fun AppListScreen(
             )
 
             Text(
-                text = "Toggle the switch to protect an app",
+                text = if (totalCount > 0) "$lockedCount of $totalCount apps protected" else "Tap any app to lock or unlock",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
+                color = if (lockedCount > 0) AccentCyan else TextSecondary,
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Search bar
             TextField(
                 value = searchQuery,
                 onValueChange = { viewModel.setSearchQuery(it) },
                 placeholder = {
-                    Text("Search apps…", color = TextMuted)
+                    Text("Search installed apps…", color = TextMuted)
                 },
                 leadingIcon = {
                     Icon(
@@ -159,30 +210,44 @@ fun AppListScreen(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                LazyColumn {
-                    items(
-                        items = apps,
-                        key = { it.packageName }
-                    ) { app ->
-                        AppListItem(
-                            appName = app.appName,
-                            packageName = app.packageName,
-                            appIcon = viewModel.getAppIcon(app.packageName),
-                            isLocked = app.isLocked,
-                            onToggle = { shouldLock ->
-                                viewModel.toggleAppLock(
-                                    app.packageName,
-                                    app.appName,
-                                    shouldLock
-                                )
-                            }
+                if (apps.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 80.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No applications found",
+                            color = TextSecondary,
+                            style = MaterialTheme.typography.bodyLarge
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
                     }
+                } else {
+                    LazyColumn {
+                        items(
+                            items = apps,
+                            key = { it.packageName }
+                        ) { app ->
+                            AppListItem(
+                                appName = app.appName,
+                                packageName = app.packageName,
+                                appIcon = viewModel.getAppIcon(app.packageName),
+                                isLocked = app.isLocked,
+                                onToggle = { shouldLock ->
+                                    viewModel.toggleAppLock(
+                                        app.packageName,
+                                        app.appName,
+                                        shouldLock
+                                    )
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
 
-                    // Bottom padding
-                    item {
-                        Spacer(modifier = Modifier.height(80.dp))
+                        item {
+                            Spacer(modifier = Modifier.height(80.dp))
+                        }
                     }
                 }
             }
