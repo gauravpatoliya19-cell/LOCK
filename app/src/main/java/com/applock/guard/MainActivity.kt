@@ -173,49 +173,12 @@ class MainActivity : FragmentActivity() {
                 )
             }
 
-            // Home Screen Dashboard
+            // Home Screen Dashboard (Unified with Apps, Security, Settings, Design, About)
             composable("home") {
-                var hasPermissions by remember { mutableStateOf(true) }
-
-                LaunchedEffect(Unit) {
-                    hasPermissions = PermissionHelper.hasAllRequiredPermissions(this@MainActivity)
-                    if (repository.isSetupComplete) {
-                        AppMonitorService.start(this@MainActivity)
-                    }
-                }
-
                 HomeScreen(
-                    onNavigateToAppList = {
-                        navController.navigate("applist")
-                    },
-                    onNavigateToSettings = {
-                        navController.navigate("settings")
-                    }
-                )
-            }
-
-            // App List Screen
-            composable("applist") {
-                AppListScreen(
-                    onBack = { navController.popBackStack() }
-                )
-            }
-
-            // Settings Screen
-            composable("settings") {
-                SettingsScreen(
-                    onBack = { navController.popBackStack() },
-                    onChangePin = {
+                    onNavigateToSetup = {
                         navController.navigate("setup") {
                             popUpTo("home") { inclusive = false }
-                        }
-                    },
-                    onResetAll = {
-                        AppMonitorService.stop(this@MainActivity)
-                        AppLockApplication.instance.securePreferences.resetAll()
-
-                        navController.navigate("setup") {
-                            popUpTo(0) { inclusive = true }
                         }
                     }
                 )
