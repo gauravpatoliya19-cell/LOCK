@@ -7,6 +7,7 @@ import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -26,6 +27,7 @@ class AppMonitorService : Service() {
     private val serviceScope = CoroutineScope(Dispatchers.Default + Job())
     private val recentlyUnlocked = mutableMapOf<String, Long>()
     private var lastForegroundPackage: String? = null
+    private var isCurrentlyShowingLock = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -35,13 +37,19 @@ class AppMonitorService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "AppMonitorService started")
+        Log.d(TAG, "AppMonitorService onStartCommand")
 
-        // Handle unlock action from LockScreenActivity
+        // Handle unlock confirmation from LockScreenActivity
         val unlockedPackage = intent?.getStringExtra(EXTRA_UNLOCKED_PACKAGE)
         if (unlockedPackage != null) {
+            isCurrentlyShowingLock = false
             markAsUnlocked(unlockedPackage)
             return START_STICKY
+        }
+
+        val lockDismissed = intent?.getBooleanExtra(EXTRA_LOCK_DISMISSED, false) ?: false
+        if (lockDismissed) {
+            isCurrentlyShowingLock = false
         }
 
         startForeground(AppLockApplication.NOTIFICATION_ID, createNotification())
@@ -60,21 +68,23 @@ class AppMonitorService : Service() {
 
                     if (currentPackage != null &&
                         currentPackage != packageName &&
-                        currentPackage != lastForegroundPackage
+                        !isAppLockInternal(currentPackage)
                     ) {
-                        // Check if this app is locked
-                        val isLocked = repository.isAppLocked(currentPackage)
-                        val isRecentlyUnlocked = isRecentlyUnlocked(currentPackage)
+                        if (currentPackage != lastForegroundPackage) {
+                            val isLocked = repository.isAppLocked(currentPackage)
+                            val isRecentlyUnlocked = isRecentlyUnlocked(currentPackage)
 
-                        if (isLocked && !isRecentlyUnlocked) {
-                            Log.d(TAG, "Locked app detected: $currentPackage")
-                            showLockScreen(currentPackage)
+                            if (isLocked && !isRecentlyUnlocked && !isCurrentlyShowingLock) {
+                                Log.d(TAG, "🚨 Locked app opened in Real-Time: $currentPackage")
+                                isCurrentlyShowingLock = true
+                                showLockScreen(currentPackage)
+                            }
                         }
                     }
 
                     lastForegroundPackage = currentPackage
                 } catch (e: Exception) {
-                    Log.e(TAG, "Error monitoring apps", e)
+                    Log.e(TAG, "Error in real-time monitor", e)
                 }
 
                 delay(POLL_INTERVAL_MS)
@@ -83,12 +93,14 @@ class AppMonitorService : Service() {
     }
 
     /**
-     * Gets the package name of the currently foreground app using UsageStatsManager.
+     * Highly responsive real-time foreground app detection via UsageEvents
      */
     private fun getForegroundPackageName(): String? {
-        val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val usageStatsManager = getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
+            ?: return null
+
         val endTime = System.currentTimeMillis()
-        val beginTime = endTime - 5000 // Look back 5 seconds
+        val beginTime = endTime - 4000 // Query last 4 seconds
 
         val usageEvents = usageStatsManager.queryEvents(beginTime, endTime)
         var foregroundPackage: String? = null
@@ -96,7 +108,9 @@ class AppMonitorService : Service() {
         val event = UsageEvents.Event()
         while (usageEvents.hasNextEvent()) {
             usageEvents.getNextEvent(event)
-            if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED) {
+            if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED ||
+                event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND
+            ) {
                 foregroundPackage = event.packageName
             }
         }
@@ -104,18 +118,29 @@ class AppMonitorService : Service() {
         return foregroundPackage
     }
 
+    private fun isAppLockInternal(pkg: String): Boolean {
+        return pkg == packageName || pkg == "$packageName.debug"
+    }
+
     private fun showLockScreen(packageName: String) {
         val intent = Intent(this, LockScreenActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or
+                Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                Intent.FLAG_ACTIVITY_NO_ANIMATION or
+                Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
+            )
             putExtra(LockScreenActivity.EXTRA_LOCKED_PACKAGE, packageName)
         }
         startActivity(intent)
     }
 
     private fun markAsUnlocked(packageName: String) {
-        val timeout = AppLockApplication.instance.securePreferences.relockTimeoutSeconds * 1000L
-        recentlyUnlocked[packageName] = System.currentTimeMillis() + timeout
-        Log.d(TAG, "Marked $packageName as unlocked for ${timeout / 1000}s")
+        val timeoutSec = AppLockApplication.instance.securePreferences.relockTimeoutSeconds
+        val timeoutMs = if (timeoutSec == 0) 3000L else timeoutSec * 1000L
+        recentlyUnlocked[packageName] = System.currentTimeMillis() + timeoutMs
+        Log.d(TAG, "Marked $packageName as unlocked for ${timeoutMs / 1000}s")
     }
 
     private fun isRecentlyUnlocked(packageName: String): Boolean {
@@ -141,7 +166,8 @@ class AppMonitorService : Service() {
             .setSmallIcon(R.drawable.ic_notification)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
-            .setSilent(true)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .build()
     }
 
@@ -153,12 +179,17 @@ class AppMonitorService : Service() {
 
     companion object {
         private const val TAG = "AppMonitorService"
-        private const val POLL_INTERVAL_MS = 500L
+        private const val POLL_INTERVAL_MS = 150L // 150ms real-time ultra-fast polling
         const val EXTRA_UNLOCKED_PACKAGE = "extra_unlocked_package"
+        const val EXTRA_LOCK_DISMISSED = "extra_lock_dismissed"
 
         fun start(context: Context) {
             val intent = Intent(context, AppMonitorService::class.java)
-            context.startForegroundService(intent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
         }
 
         fun stop(context: Context) {
@@ -170,7 +201,22 @@ class AppMonitorService : Service() {
             val intent = Intent(context, AppMonitorService::class.java).apply {
                 putExtra(EXTRA_UNLOCKED_PACKAGE, packageName)
             }
-            context.startService(intent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
+        }
+
+        fun notifyDismissed(context: Context) {
+            val intent = Intent(context, AppMonitorService::class.java).apply {
+                putExtra(EXTRA_LOCK_DISMISSED, true)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
         }
 
         fun isRunning(context: Context): Boolean {

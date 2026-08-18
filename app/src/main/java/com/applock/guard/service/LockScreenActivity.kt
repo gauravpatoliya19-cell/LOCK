@@ -1,6 +1,9 @@
 package com.applock.guard.service
 
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.fragment.app.FragmentActivity
 import com.applock.guard.AppLockApplication
@@ -15,6 +18,23 @@ class LockScreenActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Make overlay instant without transition lag
+        overridePendingTransition(0, 0)
+
+        // Set Window Flags to display immediately over any running app
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+        } else {
+            @Suppress("DEPRECATION")
+            window.addFlags(
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+            )
+        }
 
         lockedPackage = intent.getStringExtra(EXTRA_LOCKED_PACKAGE) ?: run {
             finish()
@@ -48,19 +68,13 @@ class LockScreenActivity : FragmentActivity() {
                         triggerBiometric()
                     },
                     onBackPressed = {
-                        // Go to home screen instead of the locked app
-                        val homeIntent = android.content.Intent(android.content.Intent.ACTION_MAIN).apply {
-                            addCategory(android.content.Intent.CATEGORY_HOME)
-                            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-                        }
-                        startActivity(homeIntent)
-                        finish()
+                        goToHomeScreen()
                     }
                 )
             }
         }
 
-        // Auto-trigger biometric if enabled
+        // Automatic Biometric Trigger the moment overlay pops up!
         if (repository.isBiometricEnabled &&
             repository.lockType != SecurePreferences.LockType.NONE &&
             BiometricHelper.isBiometricAvailable(this)
@@ -74,27 +88,40 @@ class LockScreenActivity : FragmentActivity() {
 
         BiometricHelper.authenticate(
             activity = this,
-            onSuccess = { onUnlockSuccess() },
-            onError = { _, _ -> /* User cancelled or error — stay on lock screen */ },
-            onFailed = { /* Wrong fingerprint — stay on lock screen */ }
+            title = "App Locked",
+            subtitle = "Touch sensor or use PIN/Pattern",
+            onSuccess = {
+                onUnlockSuccess()
+            },
+            onError = { _, _ ->
+                // User cancelled or error - PIN/Pattern keypad remains active
+            },
+            onFailed = {
+                // Wrong fingerprint - Stay on lock screen
+            }
         )
     }
 
     private fun onUnlockSuccess() {
-        // Notify service that this app was unlocked
         AppMonitorService.notifyUnlocked(this, lockedPackage)
         finish()
+        overridePendingTransition(0, 0)
     }
 
-    @Deprecated("Use onBackPressed callback in Compose")
-    override fun onBackPressed() {
-        // Prevent going back to the locked app
-        val homeIntent = android.content.Intent(android.content.Intent.ACTION_MAIN).apply {
-            addCategory(android.content.Intent.CATEGORY_HOME)
-            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+    private fun goToHomeScreen() {
+        AppMonitorService.notifyDismissed(this)
+        val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+            addCategory(Intent.CATEGORY_HOME)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         startActivity(homeIntent)
         finish()
+        overridePendingTransition(0, 0)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        goToHomeScreen()
     }
 
     companion object {
