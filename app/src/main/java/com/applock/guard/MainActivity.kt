@@ -1,7 +1,7 @@
 package com.applock.guard
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
@@ -26,7 +26,7 @@ import com.applock.guard.ui.theme.AppLockTheme
 import com.applock.guard.util.BiometricHelper
 import com.applock.guard.util.PermissionHelper
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
             composable("setup") {
                 val isBiometricAvailable = remember {
                     try {
-                        BiometricHelper.isBiometricAvailable(this@MainActivity as androidx.fragment.app.FragmentActivity)
+                        BiometricHelper.isBiometricAvailable(this@MainActivity)
                     } catch (e: Exception) {
                         false
                     }
