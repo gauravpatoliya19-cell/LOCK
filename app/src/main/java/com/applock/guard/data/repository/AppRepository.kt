@@ -36,9 +36,10 @@ class AppRepository(
 
         pm.getInstalledApplications(PackageManager.GET_META_DATA)
             .filter { appInfo ->
-                // Filter out our own app and apps without a launcher intent
+                // Filter out our own app and show all user-launchable apps
                 appInfo.packageName != ownPackage &&
-                        pm.getLaunchIntentForPackage(appInfo.packageName) != null
+                appInfo.packageName != "$ownPackage.debug" &&
+                pm.getLaunchIntentForPackage(appInfo.packageName) != null
             }
             .map { appInfo ->
                 InstalledApp(
@@ -57,16 +58,20 @@ class AppRepository(
 
     val lockedAppCount: Flow<Int> = lockedAppDao.getLockedAppCount()
 
-    suspend fun toggleAppLock(packageName: String, appName: String, shouldLock: Boolean) {
+    suspend fun toggleAppLock(packageName: String, appName: String, shouldLock: Boolean) = withContext(Dispatchers.IO) {
         if (shouldLock) {
             lockedAppDao.insert(LockedAppEntity(packageName, appName, true))
         } else {
-            lockedAppDao.updateLockStatus(packageName, false)
+            lockedAppDao.deleteByPackage(packageName)
         }
     }
 
-    suspend fun isAppLocked(packageName: String): Boolean {
-        return lockedAppDao.isAppLocked(packageName)
+    suspend fun isAppLocked(packageName: String): Boolean = withContext(Dispatchers.IO) {
+        return@withContext lockedAppDao.isAppLocked(packageName)
+    }
+
+    suspend fun unlockAll() = withContext(Dispatchers.IO) {
+        lockedAppDao.deleteAll()
     }
 
     // ---------- PIN / Pattern Verification ----------

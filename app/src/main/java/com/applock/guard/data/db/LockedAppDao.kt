@@ -29,8 +29,14 @@ interface LockedAppDao {
     @Delete
     suspend fun delete(app: LockedAppEntity)
 
+    @Query("DELETE FROM locked_apps WHERE packageName = :packageName")
+    suspend fun deleteByPackage(packageName: String)
+
     @Query("UPDATE locked_apps SET isLocked = :isLocked WHERE packageName = :packageName")
     suspend fun updateLockStatus(packageName: String, isLocked: Boolean)
+
+    @Query("DELETE FROM locked_apps")
+    suspend fun deleteAll()
 
     @Query("SELECT COUNT(*) FROM locked_apps WHERE isLocked = 1")
     fun getLockedAppCount(): Flow<Int>

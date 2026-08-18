@@ -46,32 +46,34 @@ class AppListViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun toggleAppLock(packageName: String, appName: String, shouldLock: Boolean) {
+        // 1. Immediately update UI state in memory for 0ms visual feedback
+        allApps = allApps.map {
+            if (it.packageName == packageName) it.copy(isLocked = shouldLock) else it
+        }
+        applyFilter()
+
+        // 2. Persist to Room database in background
         viewModelScope.launch {
             repository.toggleAppLock(packageName, appName, shouldLock)
-            // Update local list
-            allApps = allApps.map {
-                if (it.packageName == packageName) it.copy(isLocked = shouldLock) else it
-            }
-            applyFilter()
         }
     }
 
     fun getAppIcon(packageName: String): Drawable? {
         return try {
             getApplication<Application>().packageManager.getApplicationIcon(packageName)
-        } catch (e: PackageManager.NameNotFoundException) {
+        } catch (e: Exception) {
             null
         }
     }
 
     private fun applyFilter() {
-        val query = _searchQuery.value.lowercase()
+        val query = _searchQuery.value.trim().lowercase()
         _apps.value = if (query.isBlank()) {
             allApps
         } else {
             allApps.filter {
                 it.appName.lowercase().contains(query) ||
-                        it.packageName.lowercase().contains(query)
+                it.packageName.lowercase().contains(query)
             }
         }
     }
