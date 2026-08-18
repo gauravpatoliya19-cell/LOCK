@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +34,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.applock.guard.data.preferences.SecurePreferences
 import com.applock.guard.ui.components.PatternLock
 import com.applock.guard.ui.components.PinInput
@@ -42,6 +44,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun LockScreen(
+    title: String = "Verify Your Identity",
+    subtitle: String? = null,
     lockType: SecurePreferences.LockType,
     isBiometricEnabled: Boolean,
     onPinSubmit: (String) -> Boolean,
@@ -72,35 +76,49 @@ fun LockScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(50.dp))
 
-            // Lock icon
-            Icon(
-                imageVector = Icons.Default.Lock,
-                contentDescription = null,
-                tint = AccentBlue,
-                modifier = Modifier.size(48.dp)
-            )
+            // Lock / Fingerprint Glowing icon
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .background(AccentBlue.copy(alpha = 0.15f), shape = androidx.compose.foundation.shape.CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = if (isBiometricEnabled) Icons.Default.Fingerprint else Icons.Default.Lock,
+                    contentDescription = null,
+                    tint = AccentCyan,
+                    modifier = Modifier.size(44.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "App Locked",
-                style = MaterialTheme.typography.headlineLarge,
-                color = TextPrimary,
-                fontWeight = FontWeight.Bold
+                text = title,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp
+                ),
+                color = TextPrimary
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = when (lockType) {
-                    SecurePreferences.LockType.PIN -> "Enter PIN to unlock"
-                    SecurePreferences.LockType.PATTERN -> "Draw pattern to unlock"
-                    else -> "Unlock to continue"
+                text = subtitle ?: if (isBiometricEnabled) {
+                    "Use fingerprint or ${if (lockType == SecurePreferences.LockType.PATTERN) "pattern" else "PIN"} to continue"
+                } else {
+                    when (lockType) {
+                        SecurePreferences.LockType.PIN -> "Enter PIN code to continue"
+                        SecurePreferences.LockType.PATTERN -> "Draw pattern to continue"
+                        else -> "Authenticate to continue"
+                    }
                 },
-                style = MaterialTheme.typography.bodyLarge,
-                color = TextSecondary
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary,
+                textAlign = TextAlign.Center
             )
 
             // Error message
@@ -113,18 +131,18 @@ fun LockScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = errorMessage ?: "",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = ErrorRed,
                         textAlign = TextAlign.Center
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             if (isLockedOut) {
                 Text(
-                    text = "Too many attempts.\nTry again in $lockoutSeconds seconds.",
+                    text = "Too many failed attempts.\nTry again in $lockoutSeconds seconds.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = ErrorRed,
                     textAlign = TextAlign.Center
@@ -143,10 +161,9 @@ fun LockScreen(
                                     errorMessage = null
                                 }
 
-                                // Auto-submit at 4+ digits
                                 if (pin.length >= 4) {
                                     scope.launch {
-                                        delay(200) // Brief delay for visual feedback
+                                        delay(150)
                                         val currentPin = pin
                                         if (currentPin.length >= 4) {
                                             val success = onPinSubmit(currentPin)
@@ -218,26 +235,27 @@ fun LockScreen(
                         )
 
                         if (isBiometricEnabled) {
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(20.dp))
                             TextButton(onClick = onBiometricRequest) {
                                 Text(
-                                    text = "Use Fingerprint Instead",
-                                    color = AccentCyan
+                                    text = "Touch Fingerprint Sensor",
+                                    color = AccentCyan,
+                                    fontWeight = FontWeight.SemiBold
                                 )
                             }
                         }
                     }
 
-                    else -> { /* Should not reach here */ }
+                    else -> { /* None */ }
                 }
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Go Home button
+            // Exit / Go to Home Button
             TextButton(onClick = onBackPressed) {
                 Text(
-                    text = "Go to Home Screen",
+                    text = "Exit / Go to Home Screen",
                     color = TextMuted
                 )
             }
@@ -254,9 +272,9 @@ private fun handleFailedAttempt(
 ) {
     val remaining = attemptsRemaining - 1
     if (remaining <= 0) {
-        onUpdate(0, true, 30, "Too many failed attempts")
+        onUpdate(0, true, 30, "Too many failed attempts! Cooldown active.")
         onLockout()
     } else {
-        onUpdate(remaining, false, 0, "Wrong ${if (remaining > 1) "attempt" else "attempt"}. $remaining remaining.")
+        onUpdate(remaining, false, 0, "Wrong password! $remaining attempts remaining.")
     }
 }

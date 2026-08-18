@@ -1,7 +1,6 @@
 package com.applock.guard
 
 import android.os.Bundle
-import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
@@ -13,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -20,6 +20,7 @@ import com.applock.guard.data.preferences.SecurePreferences
 import com.applock.guard.service.AppMonitorService
 import com.applock.guard.ui.screens.applist.AppListScreen
 import com.applock.guard.ui.screens.home.HomeScreen
+import com.applock.guard.ui.screens.lock.LockScreen
 import com.applock.guard.ui.screens.settings.SettingsScreen
 import com.applock.guard.ui.screens.setup.SetupScreen
 import com.applock.guard.ui.theme.AppLockTheme
@@ -43,7 +44,8 @@ class MainActivity : FragmentActivity() {
         val navController = rememberNavController()
         val repository = AppLockApplication.instance.repository
 
-        val startDestination = if (repository.isSetupComplete) "home" else "setup"
+        // If setup is complete, first verify identity (fingerprint/password) before opening dashboard
+        val startDestination = if (repository.isSetupComplete) "auth_gate" else "setup"
 
         NavHost(
             navController = navController,
@@ -73,6 +75,70 @@ class MainActivity : FragmentActivity() {
                 ) + fadeOut(animationSpec = tween(300))
             }
         ) {
+            // Verify Your Identity Gatekeeper
+            composable("auth_gate") {
+                LaunchedEffect(Unit) {
+                    if (repository.isBiometricEnabled && BiometricHelper.isBiometricAvailable(this@MainActivity)) {
+                        BiometricHelper.authenticate(
+                            activity = this@MainActivity,
+                            title = "Verify Your Identity",
+                            subtitle = "Touch fingerprint sensor or use password",
+                            onSuccess = {
+                                navController.navigate("home") {
+                                    popUpTo("auth_gate") { inclusive = true }
+                                }
+                            },
+                            onError = { _, _ -> },
+                            onFailed = {}
+                        )
+                    }
+                }
+
+                LockScreen(
+                    title = "Verify Your Identity",
+                    subtitle = "Use fingerprint or password to open App Lock",
+                    lockType = repository.lockType,
+                    isBiometricEnabled = repository.isBiometricEnabled,
+                    onPinSubmit = { pin ->
+                        if (repository.verifyPin(pin)) {
+                            navController.navigate("home") {
+                                popUpTo("auth_gate") { inclusive = true }
+                            }
+                            true
+                        } else {
+                            false
+                        }
+                    },
+                    onPatternSubmit = { pattern ->
+                        if (repository.verifyPattern(pattern)) {
+                            navController.navigate("home") {
+                                popUpTo("auth_gate") { inclusive = true }
+                            }
+                            true
+                        } else {
+                            false
+                        }
+                    },
+                    onBiometricRequest = {
+                        BiometricHelper.authenticate(
+                            activity = this@MainActivity,
+                            title = "Verify Your Identity",
+                            subtitle = "Touch fingerprint sensor to unlock",
+                            onSuccess = {
+                                navController.navigate("home") {
+                                    popUpTo("auth_gate") { inclusive = true }
+                                }
+                            },
+                            onError = { _, _ -> },
+                            onFailed = {}
+                        )
+                    },
+                    onBackPressed = {
+                        finish()
+                    }
+                )
+            }
+
             // Setup Screen
             composable("setup") {
                 val isBiometricAvailable = remember {
@@ -107,13 +173,15 @@ class MainActivity : FragmentActivity() {
                 )
             }
 
-            // Home Screen
+            // Home Screen Dashboard
             composable("home") {
-                // Check permissions on home screen
                 var hasPermissions by remember { mutableStateOf(true) }
 
                 LaunchedEffect(Unit) {
                     hasPermissions = PermissionHelper.hasAllRequiredPermissions(this@MainActivity)
+                    if (repository.isSetupComplete) {
+                        AppMonitorService.start(this@MainActivity)
+                    }
                 }
 
                 HomeScreen(
@@ -138,17 +206,14 @@ class MainActivity : FragmentActivity() {
                 SettingsScreen(
                     onBack = { navController.popBackStack() },
                     onChangePin = {
-                        // Navigate to setup screen for re-configuration
                         navController.navigate("setup") {
                             popUpTo("home") { inclusive = false }
                         }
                     },
                     onResetAll = {
-                        // Stop service and reset
                         AppMonitorService.stop(this@MainActivity)
                         AppLockApplication.instance.securePreferences.resetAll()
 
-                        // Navigate back to setup
                         navController.navigate("setup") {
                             popUpTo(0) { inclusive = true }
                         }
