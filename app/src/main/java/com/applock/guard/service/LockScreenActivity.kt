@@ -19,10 +19,10 @@ class LockScreenActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Make overlay instant without transition lag
+        // Make overlay appearance instant without transition lag
         overridePendingTransition(0, 0)
 
-        // Set Window Flags to display immediately over any running app
+        // Set Window Flags to display immediately over any running app (WhatsApp, Instagram, etc.)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
@@ -46,6 +46,8 @@ class LockScreenActivity : FragmentActivity() {
         setContent {
             AppLockTheme {
                 LockScreen(
+                    title = "Verify Your Identity",
+                    subtitle = "App is locked. Use fingerprint or password to unlock.",
                     lockType = repository.lockType,
                     isBiometricEnabled = repository.isBiometricEnabled,
                     onPinSubmit = { pin ->
@@ -88,8 +90,8 @@ class LockScreenActivity : FragmentActivity() {
 
         BiometricHelper.authenticate(
             activity = this,
-            title = "App Locked",
-            subtitle = "Touch sensor or use PIN/Pattern",
+            title = "Verify Your Identity",
+            subtitle = "Touch fingerprint sensor to unlock",
             onSuccess = {
                 onUnlockSuccess()
             },
@@ -103,12 +105,14 @@ class LockScreenActivity : FragmentActivity() {
     }
 
     private fun onUnlockSuccess() {
+        AppLockAccessibilityService.unlockPackage(lockedPackage)
         AppMonitorService.notifyUnlocked(this, lockedPackage)
         finish()
         overridePendingTransition(0, 0)
     }
 
     private fun goToHomeScreen() {
+        AppLockAccessibilityService.lockDismissed()
         AppMonitorService.notifyDismissed(this)
         val homeIntent = Intent(Intent.ACTION_MAIN).apply {
             addCategory(Intent.CATEGORY_HOME)

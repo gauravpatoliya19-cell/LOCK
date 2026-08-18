@@ -1,12 +1,16 @@
 package com.applock.guard.util
 
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.app.AppOpsManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
 import android.os.Process
 import android.provider.Settings
+import android.view.accessibility.AccessibilityManager
+import com.applock.guard.service.AppLockAccessibilityService
 
 object PermissionHelper {
 
@@ -40,6 +44,32 @@ object PermissionHelper {
     }
 
     /**
+     * Checks if AppLock Accessibility Service is enabled for instant 0ms app locking.
+     */
+    fun isAccessibilityServiceEnabled(context: Context): Boolean {
+        if (AppLockAccessibilityService.isRunning()) return true
+
+        val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager ?: return false
+        val enabledServices = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC)
+        for (service in enabledServices) {
+            if (service.resolveInfo.serviceInfo.packageName == context.packageName) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
+     * Opens Accessibility Settings so user can enable AppLock Service.
+     */
+    fun requestAccessibilityPermission(context: Context) {
+        val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(intent)
+    }
+
+    /**
      * Opens the Usage Access settings screen.
      */
     fun requestUsageStatsPermission(context: Context) {
@@ -63,15 +93,22 @@ object PermissionHelper {
     }
 
     /**
-     * Opens the notification permission settings (Android 13+).
+     * Checks and requests to disable battery optimization so Android doesn't kill the service.
      */
-    fun requestNotificationPermission(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    fun requestIgnoreBatteryOptimizations(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+            if (pm != null && !pm.isIgnoringBatteryOptimizations(context.packageName)) {
+                try {
+                    val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    // Fallback to battery saver settings
+                }
             }
-            context.startActivity(intent)
         }
     }
 
@@ -79,6 +116,6 @@ object PermissionHelper {
      * Checks if all required permissions are granted.
      */
     fun hasAllRequiredPermissions(context: Context): Boolean {
-        return hasUsageStatsPermission(context) && hasOverlayPermission(context)
+        return (hasUsageStatsPermission(context) || isAccessibilityServiceEnabled(context)) && hasOverlayPermission(context)
     }
 }
