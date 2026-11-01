@@ -2,20 +2,21 @@
 
 <img src=".github/assets/banner.jpg" alt="AppLock Guard Banner" width="100%"/>
 
-# 🔐 AppLock Guard
+# 🔐 AppLock Guard (AAB & APK)
 
-### Secure Your Apps. Protect Your Privacy.
+### Secure Your Apps. Protect Your Privacy. Android App Bundle (.aab) Ready.
 
-[![Android](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white&style=for-the-badge)](https://developer.android.com)
+[![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?logo=android&logoColor=white&style=for-the-badge)](https://developer.android.com)
+[![Bundle](https://img.shields.io/badge/Format-AAB%20%7C%20App%20Bundle-FF6F00?logo=googleplay&logoColor=white&style=for-the-badge)](https://developer.android.com/guide/app-bundle)
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.9-7F52FF?logo=kotlin&logoColor=white&style=for-the-badge)](https://kotlinlang.org)
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack_Compose-UI-4285F4?logo=jetpackcompose&logoColor=white&style=for-the-badge)](https://developer.android.com/jetpack/compose)
 [![API](https://img.shields.io/badge/API-26%2B-brightgreen?style=for-the-badge)](https://android-arsenal.com/api?level=26)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
-**A native Android app lock application built with Kotlin & Jetpack Compose**
-**that protects your apps with PIN, Pattern, or Fingerprint authentication.**
+**A high-performance Android App Lock application built with Kotlin & Jetpack Compose.**  
+**Features real-time 0ms app locking, Fingerprint / PIN / Pattern security, and a private Gallery Vault.**
 
-[📦 Download APK](#-download) · [📖 How It Works](#-how-it-works) · [🛠️ Build Guide](#-build-instructions)
+[📦 Download AAB / APK](#-download-releases) · [🖼️ App Screens & Image Descriptions](#-app-screens--image-descriptions) · [🔒 Features](#-key-features) · [🛠️ Build Guide](#-build-instructions)
 
 ---
 
@@ -25,34 +26,79 @@
 
 ---
 
+## 🖼️ App Screens & Image Descriptions
+
+Below is a detailed walkthrough of each application screen and interface:
+
+### 1. 🛡️ Real-Time "Verify Your Identity" Lock Screen (Image Description)
+* **Visual Appearance**: Sleek midnight obsidian theme with an illuminated electric cyan padlock icon, pulsing fingerprint biometric scanner sensor, and dynamic PIN/Pattern dialer pad.
+* **Functionality**:
+  * Displays "Verify Your Identity" with subtitle *"Use fingerprint or password to continue"*.
+  * Triggers biometric sensor vibration immediately upon opening any protected app.
+  * Allows smooth fallback to PIN entry or Pattern swipe gesture.
+  * Automatically applies a 30-second cooldown timer after 5 incorrect authentication attempts.
+
+### 2. 📱 Modern App Management Dashboard (Image Description)
+* **Visual Appearance**: Clean gradient card layout matching the reference UI with dual segmented pill buttons: `[ UNLOCKED (Count) ]` | `[ LOCKED (Count) ]`.
+* **Functionality**:
+  * Lists all user-installed applications (WhatsApp, Instagram, Photos, YouTube, Settings, etc.) with real-time app icons.
+  * Features a **"Lock All"** / **"Unlock All"** one-touch toggle button.
+  * Dedicated search bar for instant app filtering.
+  * Clickable padlock status button next to each app item.
+
+### 3. 🖼️ Gallery & Media Vault (Image Description)
+* **Visual Appearance**: Interactive 3-column media grid with video duration indicators, glowing private vault lock badges, and top category filter pills (`All`, `Photos`, `Videos`, `🔒 Vault`).
+* **Functionality**:
+  * **1-Touch Phone Gallery Lock**: Switch to lock Google Photos and OEM Gallery applications automatically.
+  * **Private Vault**: Hide and secure photos/videos behind biometric hardware encryption.
+  * **Multi-Select Action Bar**: Batch select photos to lock or unlock from the vault.
+  * **Full-Screen Media Viewer**: High-definition preview with file details (size, album, date) and 1-tap vault toggle.
+
+### 4. ⚙️ Security & System Permissions Screen (Image Description)
+* **Visual Appearance**: Structured security cards with colored status indicators (Green Check for Granted, Orange Warning for Needs Permission).
+* **Functionality**:
+  * **0ms Real-Time Accessibility Service**: Bypasses Android 10-15 background activity start restrictions with zero battery consumption.
+  * **Draw Over Other Apps (Overlay)**: Enables instantaneous lock screen display.
+  * **Hardware Biometrics**: Toggle fingerprint and biometric sensor integration.
+  * **Battery Optimization Exemption**: Prevents Android OEM task killers from terminating the guard service.
+
+### 5. 🎨 Custom Lock Themes (Image Description)
+* **Themes Included**: *Cyber Blue (Default)*, *Midnight Obsidian (AMOLED)*, *Emerald Guard (Vibrant Green)*, and *Royal Purple (Velvet Gradient)*.
+
+---
+
 ## ✨ Key Features
 
 <table>
 <tr>
 <td width="50%">
 
-### 🔑 Multiple Lock Methods
-- **PIN Lock** — 4–6 digit secure PIN code
-- **Pattern Lock** — 3×3 gesture pattern
-- **Fingerprint** — Biometric authentication
+### 🔑 Authentication Methods
+- **Fingerprint / Biometric** — Hardware biometric sensor
+- **PIN Code** — 4 to 6 digit encrypted passcodes
+- **Pattern Lock** — 3×3 gesture pattern connection
+- **"Verify Your Identity"** — Gatekeeper for AppLock settings
 
-### 🛡️ Smart Protection
-- **Background Monitoring** — Foreground service detects locked apps
-- **Auto-start on Boot** — Protection resumes after restart
-- **Re-lock Timeout** — Configurable auto re-lock timer
+### 🛡️ Real-Time Defense
+- **0ms Instant Detection** — Android Accessibility engine
+- **Foreground Monitoring** — Continuous app state tracking
+- **Auto-Start on Boot** — Background protection persists after reboot
+- **Failed Attempt Lockout** — 30-second security cooldown
 
 </td>
 <td width="50%">
 
-### 🚫 Anti-Bypass
-- **Failed Attempt Lock** — 5 wrong attempts → 30s cooldown
-- **Overlay Protection** — Lock screen overlays locked apps
-- **Encrypted Storage** — EncryptedSharedPreferences for credentials
+### 🖼️ Gallery & Media Vault
+- **Private Photo & Video Vault** — Store sensitive media locally
+- **Phone Gallery Lock** — Auto-locks Google Photos & device galleries
+- **Media Viewer** — Fullscreen photo/video preview dialog
+- **Batch Operations** — Multi-select to lock/unlock albums
 
-### 🎨 Premium Experience
-- **Dark UI Theme** — Sleek dark mode with gradient accents
-- **Material 3** — Modern design language
-- **Smooth Animations** — Polished micro-interactions
+### ⚡ Performance & Offline
+- **Zero Cloud Leakage** — 100% offline, zero network tracking
+- **Encrypted Storage** — SHA-256 / EncryptedSharedPreferences
+- **Battery Efficient** — Event-driven window state listeners
+- **Modern Jetpack Compose** — Material 3 fluid animations
 
 </td>
 </tr>
@@ -60,246 +106,51 @@
 
 ---
 
-## 🏗️ Architecture
+## 📦 Download Releases
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                     MVVM Architecture                        │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌─────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
-│  │   UI Layer   │  │  Service Layer  │  │   Data Layer    │  │
-│  │             │  │                 │  │                 │  │
-│  │ Compose UI  │  │ Foreground Svc  │  │  Room Database  │  │
-│  │ ViewModels  │  │ UsageStats Mgr  │  │  EncryptedPrefs │  │
-│  │ Navigation  │  │ Boot Receiver   │  │  Repository     │  │
-│  └──────┬──────┘  └────────┬────────┘  └────────┬────────┘  │
-│         │                  │                    │           │
-│         └──────────────────┴────────────────────┘           │
-│                            │                                 │
-│                    ┌───────┴───────┐                         │
-│                    │   Utilities   │                         │
-│                    │ Biometric API │                         │
-│                    │ Crypto Helper │                         │
-│                    │ Permission Mgr│                         │
-│                    └───────────────┘                         │
-└──────────────────────────────────────────────────────────────┘
-```
+You can download both the **APK** (for direct phone install) and the **AAB** (Android App Bundle for Google Play Console):
 
----
+| Format | File Name | Destination / Use Case |
+|---|---|---|
+| **.AAB** | `AppLock-Fingerprint-PIN.aab` | Google Play Store Upload (Play Console) |
+| **.APK** | `AppLock-Fingerprint-PIN.apk` | Direct Phone Installation (Sideload) |
 
-## 🔒 How It Works
-
-```mermaid
-graph LR
-    A[📱 User launches locked app] --> B[🔍 Foreground Service detects]
-    B --> C[🛡️ Lock overlay appears]
-    C --> D{Authenticate}
-    D -->|PIN| E[✅ Unlock]
-    D -->|Pattern| E
-    D -->|Fingerprint| E
-    D -->|❌ 5 fails| F[⏳ 30s cooldown]
-    E --> G[⏰ Re-lock after timeout]
-    F --> C
-```
-
-> **Step-by-step flow:**
-> 1. **Setup** — User sets a master PIN or draws a pattern on first launch
-> 2. **Select Apps** — Choose which apps to protect from the installed apps list
-> 3. **Monitoring** — A foreground service polls `UsageStatsManager` every 500ms
-> 4. **Lock Trigger** — When a locked app opens, the lock overlay appears
-> 5. **Authenticate** — User unlocks via PIN, Pattern, or Fingerprint
-> 6. **Re-lock** — After the configured timeout, the app locks again
-
----
-
-## 📦 Download
-
-### From Releases
-
-> **Latest Release:** Check the [**Releases**](../../releases) page for the latest debug APK
-
-### Build it yourself
-
-See the [Build Instructions](#-build-instructions) below.
+> Download the latest build from the **[GitHub Actions Artifacts](https://github.com/gauravpatoliya19-cell/LOCK_ABB/actions)** tab.
 
 ---
 
 ## 🛠️ Build Instructions
 
 ### Prerequisites
+- JDK 17
+- Android SDK (API 34)
+- Gradle 8.5+
 
-| Requirement | Version | Link |
-|---|---|---|
-| Android Studio | Hedgehog 2023.1.1+ | [Download](https://developer.android.com/studio) |
-| JDK | 17 (bundled) | — |
-| Android SDK | API 34 | — |
-| Build Tools | 34.x | — |
-| Device/Emulator | API 26+ | — |
-
-### Quick Start
-
+### Build Android App Bundle (.aab)
 ```bash
-# 1. Clone the repository
-git clone https://github.com/gauravpatoliya19/LOCK.git
-cd LOCK
+# Linux / macOS
+./gradlew bundleDebug
+# or for release:
+./gradlew bundleRelease
 
-# 2. Build debug APK
 # Windows
-gradlew.bat assembleDebug
+.\gradlew.bat bundleDebug
+```
+The resulting `.aab` file will be located at:
+`app/build/outputs/bundle/debug/app-debug.aab` (or `app-release.aab`)
 
-# macOS / Linux
+### Build Android APK (.apk)
+```bash
+# Linux / macOS
 ./gradlew assembleDebug
 
-# 3. Install on device
-adb install app/build/outputs/apk/debug/app-debug.apk
-```
-
-### Build via Android Studio
-
-1. **Open** → File → Open → select the `LOCK` folder
-2. **Wait** for Gradle sync to complete
-3. **Build** → Build Bundle(s) / APK(s) → Build APK(s)
-4. **Locate** APK at `app/build/outputs/apk/debug/app-debug.apk`
-
-<details>
-<summary><strong>📦 Build a Signed Release APK</strong></summary>
-
-#### 1. Generate a Signing Key
-
-```bash
-keytool -genkey -v -keystore applock-release.keystore \
-  -alias applock -keyalg RSA -keysize 2048 -validity 10000
-```
-
-#### 2. Configure Signing in `app/build.gradle.kts`
-
-```kotlin
-android {
-    signingConfigs {
-        create("release") {
-            storeFile = file("../applock-release.keystore")
-            storePassword = "your_store_password"
-            keyAlias = "applock"
-            keyPassword = "your_key_password"
-        }
-    }
-
-    buildTypes {
-        release {
-            signingConfig = signingConfigs.getByName("release")
-        }
-    }
-}
-```
-
-#### 3. Build Release
-
-```bash
 # Windows
-gradlew.bat assembleRelease
-
-# macOS / Linux
-./gradlew assembleRelease
+.\gradlew.bat assembleDebug
 ```
-
-Output: `app/build/outputs/apk/release/app-release.apk`
-
-</details>
+The resulting `.apk` file will be located at:
+`app/build/outputs/apk/debug/app-debug.apk`
 
 ---
 
-## ⚙️ Required Permissions
-
-| Permission | Purpose | Android Setting |
-|---|---|---|
-| 📊 **Usage Access** | Detect foreground app | Settings → Security → Usage Access |
-| 🪟 **Display Over Apps** | Show lock screen overlay | Settings → Apps → Special Access |
-| 🔔 **Notifications** | "Protection active" indicator | Auto-prompted on Android 13+ |
-| 🔄 **Boot Completed** | Restart service after reboot | Automatic |
-
----
-
-## 🧪 Testing
-
-```bash
-# Unit tests
-gradlew.bat test
-
-# Instrumented tests (requires device/emulator)
-gradlew.bat connectedAndroidTest
-```
-
----
-
-## 🧰 Tech Stack
-
-<div align="center">
-
-| Technology | Purpose |
-|---|---|
-| ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?logo=kotlin&logoColor=white&style=flat-square) | Primary language |
-| ![Compose](https://img.shields.io/badge/Jetpack_Compose-4285F4?logo=jetpackcompose&logoColor=white&style=flat-square) | Declarative UI |
-| ![Material3](https://img.shields.io/badge/Material_3-757575?logo=materialdesign&logoColor=white&style=flat-square) | Design system |
-| ![Room](https://img.shields.io/badge/Room_DB-3DDC84?logo=android&logoColor=white&style=flat-square) | Local database |
-| ![KSP](https://img.shields.io/badge/KSP-7F52FF?logo=kotlin&logoColor=white&style=flat-square) | Annotation processing |
-| ![Coroutines](https://img.shields.io/badge/Coroutines-7F52FF?logo=kotlin&logoColor=white&style=flat-square) | Async operations |
-| ![Biometric](https://img.shields.io/badge/BiometricX-3DDC84?logo=android&logoColor=white&style=flat-square) | Fingerprint API |
-
-</div>
-
----
-
-## 📁 Project Structure
-
-```
-LOCK/
-├── .github/
-│   ├── assets/                          # Banner & screenshots
-│   └── workflows/
-│       └── build.yml                    # CI: Build debug APK
-├── app/
-│   ├── src/main/
-│   │   ├── java/com/applock/guard/
-│   │   │   ├── AppLockApplication.kt    # App initialization
-│   │   │   ├── MainActivity.kt          # Entry point + navigation
-│   │   │   ├── data/                    # Database, preferences, repository
-│   │   │   ├── service/                 # Foreground service, boot receiver
-│   │   │   ├── ui/                      # Compose screens + components
-│   │   │   └── util/                    # Biometric, crypto, permission helpers
-│   │   ├── res/                         # Resources (strings, themes, icons)
-│   │   └── AndroidManifest.xml
-│   └── build.gradle.kts                 # App-level build config
-├── build.gradle.kts                     # Project-level config
-├── settings.gradle.kts
-├── gradle.properties
-└── README.md
-```
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Here's how:
-
-1. **Fork** this repository
-2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Commit** your changes: `git commit -m 'Add amazing feature'`
-4. **Push** to the branch: `git push origin feature/amazing-feature`
-5. **Open** a Pull Request
-
----
-
-## ⭐ Star History
-
-If you find this project useful, consider giving it a ⭐!
-
----
-
-<div align="center">
-
-**Made with ❤️ using Kotlin & Jetpack Compose**
-
-[![GitHub](https://img.shields.io/badge/GitHub-gauravpatoliya19-181717?logo=github&logoColor=white&style=for-the-badge)](https://github.com/gauravpatoliya19)
-
-</div>
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
