@@ -85,6 +85,7 @@ fun HomeScreen(
             ) {
                 when (selectedTab) {
                     MainTab.APPS -> AppsTabContent(viewModel)
+                    MainTab.GALLERY -> com.applock.guard.ui.screens.gallery.GalleryTabContent(viewModel)
                     MainTab.SECURITY -> SecurityTabContent(viewModel, onNavigateToSetup)
                     MainTab.SETTINGS -> SettingsTabContent(viewModel)
                     MainTab.DESIGN -> DesignTabContent()
@@ -118,7 +119,7 @@ private fun TopTitleHeader() {
 }
 
 // -------------------------------------------------------------
-// Top Navigation Tab Bar (Apps, Security, Settings, Design, About)
+// Top Navigation Tab Bar (Apps, Gallery, Security, Settings, Design, About)
 // -------------------------------------------------------------
 @Composable
 private fun TopTabBar(
@@ -128,7 +129,7 @@ private fun TopTabBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -137,6 +138,12 @@ private fun TopTabBar(
             icon = Icons.AutoMirrored.Filled.List,
             isSelected = selectedTab == MainTab.APPS,
             onClick = { onTabSelect(MainTab.APPS) }
+        )
+        TabIconItem(
+            label = "Gallery",
+            icon = Icons.Default.PhotoLibrary,
+            isSelected = selectedTab == MainTab.GALLERY,
+            onClick = { onTabSelect(MainTab.GALLERY) }
         )
         TabIconItem(
             label = "Security",
@@ -182,14 +189,14 @@ private fun TabIconItem(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
             .clickable { onClick() }
-            .padding(horizontal = 8.dp, vertical = 6.dp),
+            .padding(horizontal = 4.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
             imageVector = icon,
             contentDescription = label,
             tint = tintColor,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(22.dp)
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
@@ -647,6 +654,13 @@ private fun SettingsTabContent(viewModel: HomeViewModel) {
     val hasOverlay by viewModel.hasOverlay.collectAsState()
     val hasUsage by viewModel.hasUsage.collectAsState()
     val hasAccessibility by viewModel.hasAccessibility.collectAsState()
+    val hasGalleryPermission by viewModel.hasGalleryPermission.collectAsState()
+
+    val galleryPermLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
+    ) {
+        viewModel.refreshGalleryPermissions()
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -687,6 +701,18 @@ private fun SettingsTabContent(viewModel: HomeViewModel) {
                 subtitle = "Provides instant 0ms app detection",
                 isGranted = hasAccessibility,
                 onClick = { PermissionHelper.requestAccessibilityPermission(context) }
+            )
+        }
+
+        item {
+            PermissionCard(
+                title = "Gallery & Photos Access",
+                subtitle = "Allows viewing and locking private gallery photos",
+                isGranted = hasGalleryPermission,
+                onClick = {
+                    val perms = PermissionHelper.getGalleryPermissions()
+                    galleryPermLauncher.launch(perms)
+                }
             )
         }
 

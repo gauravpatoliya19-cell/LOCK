@@ -6,13 +6,14 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [LockedAppEntity::class],
-    version = 1,
+    entities = [LockedAppEntity::class, VaultMediaEntity::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AppLockDatabase : RoomDatabase() {
 
     abstract fun lockedAppDao(): LockedAppDao
+    abstract fun vaultMediaDao(): VaultMediaDao
 
     companion object {
         @Volatile

@@ -19,6 +19,9 @@ class AppLockApplication : Application() {
     lateinit var repository: AppRepository
         private set
 
+    lateinit var galleryRepository: com.applock.guard.data.repository.GalleryRepository
+        private set
+
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -34,6 +37,13 @@ class AppLockApplication : Application() {
             lockedAppDao = database.lockedAppDao(),
             securePreferences = securePreferences,
             context = this
+        )
+
+        // Initialize gallery repository
+        galleryRepository = com.applock.guard.data.repository.GalleryRepository(
+            context = this,
+            vaultDao = database.vaultMediaDao(),
+            appRepository = repository
         )
 
         // Create notification channel for foreground service
